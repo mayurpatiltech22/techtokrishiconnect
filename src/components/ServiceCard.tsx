@@ -20,7 +20,22 @@ export const ServiceCard = ({ icon: Icon, title, description, action }: ServiceC
         <CardDescription className="text-base">{description}</CardDescription>
       </CardHeader>
       <CardContent>
-        <Button variant="outline" className="w-full border-2 hover:bg-primary hover:text-primary-foreground transition-colors">
+        <Button 
+          variant="outline" 
+          className="w-full border-2 hover:bg-primary hover:text-primary-foreground transition-colors"
+          onClick={() => {
+            const sectionMap: Record<string, string> = {
+              'Browse Products': 'services',
+              'Find Workers': 'services',
+              'View Schemes': 'schemes',
+              'Check Weather': 'weather',
+              'View Prices': 'weather',
+              'Rent Equipment': 'equipment'
+            };
+            const targetSection = sectionMap[action] || 'services';
+            document.getElementById(targetSection)?.scrollIntoView({ behavior: 'smooth' });
+          }}
+        >
           {action}
         </Button>
       </CardContent>

@@ -17,7 +17,9 @@ const Index = () => {
       <main className="flex-1">
         <Hero />
         <StatsSection />
-        <ServicesSection />
+        <div id="services">
+          <ServicesSection />
+        </div>
         
         <section id="weather" className="py-16 bg-background">
           <div className="container px-4">
@@ -34,12 +36,16 @@ const Index = () => {
           </div>
         </section>
 
-        <SchemesSection />
-        <EquipmentSection />
+        <div id="schemes">
+          <SchemesSection />
+        </div>
+        <div id="equipment">
+          <EquipmentSection />
+        </div>
         <TestimonialsSection />
         <FAQSection />
         
-        <section className="py-16 bg-gradient-accent">
+        <section id="cta" className="py-16 bg-gradient-accent">
           <div className="container px-4 text-center">
             <h2 className="text-3xl md:text-4xl font-bold mb-4 text-accent-foreground">
               Join 25,000+ Maharashtra Farmers
@@ -47,7 +53,10 @@ const Index = () => {
             <p className="text-lg text-accent-foreground/90 mb-8 max-w-2xl mx-auto">
               Start accessing better prices, connecting with labor groups, and staying informed today. Free registration for all farmers.
             </p>
-            <button className="bg-background text-foreground px-8 py-3 rounded-lg font-semibold hover:opacity-90 transition-opacity shadow-elevated">
+            <button 
+              className="bg-background text-foreground px-8 py-3 rounded-lg font-semibold hover:opacity-90 transition-opacity shadow-elevated"
+              onClick={() => alert('Registration form coming soon! This will connect to our authentication system.')}
+            >
               Register Now - It's Free
             </button>
           </div>
