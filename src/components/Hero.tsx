@@ -26,10 +26,19 @@ export const Hero = () => {
             rent equipment, and stay updated with weather and government schemes - all in one place.
           </p>
           <div className="flex flex-col sm:flex-row gap-4">
-            <Button size="lg" className="bg-gradient-primary text-primary-foreground hover:opacity-90 transition-opacity">
+            <Button 
+              size="lg" 
+              className="bg-gradient-primary text-primary-foreground hover:opacity-90 transition-opacity"
+              onClick={() => document.getElementById('services')?.scrollIntoView({ behavior: 'smooth' })}
+            >
               Get Started <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
-            <Button size="lg" variant="outline" className="border-2">
+            <Button 
+              size="lg" 
+              variant="outline" 
+              className="border-2"
+              onClick={() => document.getElementById('services')?.scrollIntoView({ behavior: 'smooth' })}
+            >
               Learn More
             </Button>
           </div>
