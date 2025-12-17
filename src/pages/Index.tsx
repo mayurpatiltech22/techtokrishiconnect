@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { Hero } from "@/components/Hero";
 import { ServicesSection } from "@/components/ServicesSection";
@@ -9,6 +10,7 @@ import { StatsSection } from "@/components/StatsSection";
 import { TestimonialsSection } from "@/components/TestimonialsSection";
 import { FAQSection } from "@/components/FAQSection";
 import { Footer } from "@/components/Footer";
+import { Button } from "@/components/ui/button";
 
 const Index = () => {
   return (
@@ -17,9 +19,7 @@ const Index = () => {
       <main className="flex-1">
         <Hero />
         <StatsSection />
-        <div id="services">
-          <ServicesSection />
-        </div>
+        <ServicesSection />
         
         <section id="weather" className="py-16 bg-background">
           <div className="container px-4">
@@ -29,7 +29,7 @@ const Index = () => {
                 Real-time weather and market information at your fingertips
               </p>
             </div>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div id="market" className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <WeatherWidget />
               <MarketPrices />
             </div>
@@ -53,12 +53,13 @@ const Index = () => {
             <p className="text-lg text-accent-foreground/90 mb-8 max-w-2xl mx-auto">
               Start accessing better prices, connecting with labor groups, and staying informed today. Free registration for all farmers.
             </p>
-            <button 
-              className="bg-background text-foreground px-8 py-3 rounded-lg font-semibold hover:opacity-90 transition-opacity shadow-elevated"
-              onClick={() => alert('Registration form coming soon! This will connect to our authentication system.')}
+            <Button 
+              asChild
+              size="lg"
+              className="bg-background text-foreground hover:bg-background/90 shadow-elevated"
             >
-              Register Now - It's Free
-            </button>
+              <Link to="/auth">Register Now - It's Free</Link>
+            </Button>
           </div>
         </section>
       </main>
