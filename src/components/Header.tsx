@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Sprout, Menu, ShoppingCart, User, LogOut } from "lucide-react";
+import { Sprout, Menu, ShoppingCart, User, LogOut, Calendar, Tractor } from "lucide-react";
 import { useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -56,8 +56,8 @@ export const Header = () => {
         <nav className="hidden md:flex items-center gap-6">
           <Link to="/products" className="text-sm font-medium hover:text-primary transition-colors">Products</Link>
           <Link to="/labor" className="text-sm font-medium hover:text-primary transition-colors">Labor</Link>
+          <Link to="/equipment" className="text-sm font-medium hover:text-primary transition-colors">Equipment</Link>
           <button onClick={() => scrollToSection('schemes')} className="text-sm font-medium hover:text-primary transition-colors">Schemes</button>
-          <button onClick={() => scrollToSection('weather')} className="text-sm font-medium hover:text-primary transition-colors">Weather</button>
           
           <Link to="/cart" className="relative">
             <Button variant="ghost" size="icon">
@@ -81,6 +81,10 @@ export const Header = () => {
               <DropdownMenuContent align="end">
                 <DropdownMenuItem onClick={() => navigate('/orders')}>
                   My Orders
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate('/my-bookings')}>
+                  <Calendar className="h-4 w-4 mr-2" />
+                  My Bookings
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={handleSignOut}>
                   <LogOut className="h-4 w-4 mr-2" />
@@ -114,15 +118,17 @@ export const Header = () => {
               </Button>
             </SheetTrigger>
             <SheetContent side="right" className="w-[300px]">
-              <nav className="flex flex-col gap-4 mt-8">
+            <nav className="flex flex-col gap-4 mt-8">
                 <Link to="/products" onClick={() => setMobileMenuOpen(false)} className="text-lg font-medium hover:text-primary transition-colors">Products</Link>
                 <Link to="/labor" onClick={() => setMobileMenuOpen(false)} className="text-lg font-medium hover:text-primary transition-colors">Labor</Link>
+                <Link to="/equipment" onClick={() => setMobileMenuOpen(false)} className="text-lg font-medium hover:text-primary transition-colors">Equipment</Link>
                 <button onClick={() => scrollToSection('schemes')} className="text-lg font-medium hover:text-primary transition-colors text-left">Schemes</button>
                 <button onClick={() => scrollToSection('weather')} className="text-lg font-medium hover:text-primary transition-colors text-left">Weather</button>
                 
                 {user ? (
                   <>
                     <Link to="/orders" onClick={() => setMobileMenuOpen(false)} className="text-lg font-medium hover:text-primary transition-colors">My Orders</Link>
+                    <Link to="/my-bookings" onClick={() => setMobileMenuOpen(false)} className="text-lg font-medium hover:text-primary transition-colors">My Bookings</Link>
                     <Button variant="outline" onClick={handleSignOut}>
                       <LogOut className="h-4 w-4 mr-2" />
                       Sign Out
