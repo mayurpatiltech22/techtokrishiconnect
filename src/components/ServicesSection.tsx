@@ -88,7 +88,7 @@ export const ServicesSection = () => {
       title: "Equipment Rental",
       description: "Rent tractors and farming equipment at affordable rates nearby.",
       action: "Rent Equipment",
-      scrollTo: "equipment"
+      link: "/equipment"
     }
   ];
 
