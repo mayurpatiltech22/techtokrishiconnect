@@ -73,6 +73,107 @@ export type Database = {
         }
         Relationships: []
       }
+      equipment: {
+        Row: {
+          category: string | null
+          created_at: string | null
+          description: string | null
+          district: string | null
+          id: string
+          image_url: string | null
+          is_available: boolean | null
+          location: string | null
+          name: string
+          owner_id: string | null
+          price_per_day: number
+          specifications: string[] | null
+          updated_at: string | null
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          district?: string | null
+          id?: string
+          image_url?: string | null
+          is_available?: boolean | null
+          location?: string | null
+          name: string
+          owner_id?: string | null
+          price_per_day: number
+          specifications?: string[] | null
+          updated_at?: string | null
+        }
+        Update: {
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          district?: string | null
+          id?: string
+          image_url?: string | null
+          is_available?: boolean | null
+          location?: string | null
+          name?: string
+          owner_id?: string | null
+          price_per_day?: number
+          specifications?: string[] | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      equipment_bookings: {
+        Row: {
+          created_at: string | null
+          delivery_address: string | null
+          end_date: string
+          equipment_id: string
+          id: string
+          notes: string | null
+          renter_id: string
+          renter_phone: string | null
+          start_date: string
+          status: string | null
+          total_amount: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          delivery_address?: string | null
+          end_date: string
+          equipment_id: string
+          id?: string
+          notes?: string | null
+          renter_id: string
+          renter_phone?: string | null
+          start_date: string
+          status?: string | null
+          total_amount?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          delivery_address?: string | null
+          end_date?: string
+          equipment_id?: string
+          id?: string
+          notes?: string | null
+          renter_id?: string
+          renter_phone?: string | null
+          start_date?: string
+          status?: string | null
+          total_amount?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "equipment_bookings_equipment_id_fkey"
+            columns: ["equipment_id"]
+            isOneToOne: false
+            referencedRelation: "equipment"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       labor_bookings: {
         Row: {
           created_at: string | null
