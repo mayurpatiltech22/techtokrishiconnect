@@ -284,6 +284,39 @@ export type Database = {
         }
         Relationships: []
       }
+      market_prices: {
+        Row: {
+          created_at: string
+          crop_name: string
+          district: string
+          id: string
+          market_name: string
+          price: number
+          recorded_at: string
+          unit: string | null
+        }
+        Insert: {
+          created_at?: string
+          crop_name: string
+          district: string
+          id?: string
+          market_name: string
+          price: number
+          recorded_at?: string
+          unit?: string | null
+        }
+        Update: {
+          created_at?: string
+          crop_name?: string
+          district?: string
+          id?: string
+          market_name?: string
+          price?: number
+          recorded_at?: string
+          unit?: string | null
+        }
+        Relationships: []
+      }
       order_items: {
         Row: {
           created_at: string | null
