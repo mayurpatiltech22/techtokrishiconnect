@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from '@/hooks/use-toast';
-import { Calendar, MapPin, Phone, Users, Loader2, IndianRupee, Tractor, CheckCircle, XCircle, Clock } from 'lucide-react';
+import { Calendar, MapPin, Phone, Users, Loader2, IndianRupee, Tractor, CheckCircle, XCircle, Clock, Package, Edit, Trash2, Eye, EyeOff } from 'lucide-react';
 
 interface LaborBooking {
   id: string;
@@ -54,6 +54,19 @@ interface EquipmentBooking {
   };
 }
 
+interface MyEquipment {
+  id: string;
+  name: string;
+  description: string | null;
+  image_url: string | null;
+  price_per_day: number;
+  location: string | null;
+  district: string | null;
+  is_available: boolean;
+  category: string | null;
+  created_at: string;
+}
+
 const STATUS_COLORS: Record<string, string> = {
   pending: 'bg-yellow-500',
   confirmed: 'bg-green-500',
@@ -66,8 +79,10 @@ export default function MyBookings() {
   const [incomingLaborRequests, setIncomingLaborRequests] = useState<LaborBooking[]>([]);
   const [myEquipmentBookings, setMyEquipmentBookings] = useState<EquipmentBooking[]>([]);
   const [incomingEquipmentRequests, setIncomingEquipmentRequests] = useState<EquipmentBooking[]>([]);
+  const [myListedEquipment, setMyListedEquipment] = useState<MyEquipment[]>([]);
   const [loading, setLoading] = useState(true);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -168,10 +183,12 @@ export default function MyBookings() {
     // Fetch my equipment to get incoming rental requests
     const { data: myEquipment } = await supabase
       .from('equipment')
-      .select('id, name, location')
+      .select('id, name, location, description, image_url, price_per_day, district, is_available, category, created_at')
       .eq('owner_id', user.id);
 
     if (myEquipment && myEquipment.length > 0) {
+      setMyListedEquipment(myEquipment as MyEquipment[]);
+      
       const equipIds = myEquipment.map(e => e.id);
       const { data: incomingEquipBookings } = await supabase
         .from('equipment_bookings')
@@ -197,6 +214,8 @@ export default function MyBookings() {
       } else {
         setIncomingEquipmentRequests([]);
       }
+    } else {
+      setMyListedEquipment([]);
     }
 
     setLoading(false);
@@ -238,6 +257,40 @@ export default function MyBookings() {
     day: 'numeric', month: 'short', year: 'numeric'
   });
 
+  const toggleEquipmentAvailability = async (equipmentId: string, currentAvailability: boolean) => {
+    setUpdatingId(equipmentId);
+    const { error } = await supabase
+      .from('equipment')
+      .update({ is_available: !currentAvailability })
+      .eq('id', equipmentId);
+
+    if (error) {
+      toast({ title: 'Failed to update availability', variant: 'destructive' });
+    } else {
+      toast({ title: `Equipment ${!currentAvailability ? 'available' : 'unavailable'}` });
+      fetchAllBookings();
+    }
+    setUpdatingId(null);
+  };
+
+  const deleteEquipment = async (equipmentId: string) => {
+    if (!confirm('Are you sure you want to delete this equipment?')) return;
+    
+    setDeletingId(equipmentId);
+    const { error } = await supabase
+      .from('equipment')
+      .delete()
+      .eq('id', equipmentId);
+
+    if (error) {
+      toast({ title: 'Failed to delete equipment', variant: 'destructive' });
+    } else {
+      toast({ title: 'Equipment deleted successfully' });
+      fetchAllBookings();
+    }
+    setDeletingId(null);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex flex-col bg-background">
@@ -258,7 +311,7 @@ export default function MyBookings() {
         <h1 className="text-3xl font-bold text-primary mb-6">My Bookings</h1>
 
         <Tabs defaultValue="my-labor" className="space-y-6">
-          <TabsList className="grid grid-cols-2 md:grid-cols-4 w-full">
+          <TabsList className="grid grid-cols-3 md:grid-cols-5 w-full">
             <TabsTrigger value="my-labor" className="text-xs md:text-sm">
               My Labor Bookings
               {myLaborBookings.length > 0 && (
@@ -285,6 +338,12 @@ export default function MyBookings() {
                 <Badge variant="destructive" className="ml-2">
                   {incomingEquipmentRequests.filter(r => r.status === 'pending').length}
                 </Badge>
+              )}
+            </TabsTrigger>
+            <TabsTrigger value="my-listed-equipment" className="text-xs md:text-sm">
+              My Equipment
+              {myListedEquipment.length > 0 && (
+                <Badge variant="secondary" className="ml-2">{myListedEquipment.length}</Badge>
               )}
             </TabsTrigger>
           </TabsList>
@@ -518,6 +577,79 @@ export default function MyBookings() {
                           </Button>
                         </div>
                       )}
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </TabsContent>
+
+          {/* My Listed Equipment */}
+          <TabsContent value="my-listed-equipment">
+            {myListedEquipment.length === 0 ? (
+              <Card>
+                <CardContent className="py-12 text-center">
+                  <Package className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                  <p className="text-muted-foreground">You haven't listed any equipment yet</p>
+                  <Button className="mt-4" onClick={() => navigate('/equipment')}>
+                    List Equipment
+                  </Button>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid gap-4 md:grid-cols-2">
+                {myListedEquipment.map(equip => (
+                  <Card key={equip.id}>
+                    <CardHeader className="pb-2">
+                      <div className="flex items-start justify-between">
+                        <CardTitle className="text-lg">{equip.name}</CardTitle>
+                        <Badge className={equip.is_available ? 'bg-green-500' : 'bg-gray-500'}>
+                          {equip.is_available ? 'Available' : 'Unavailable'}
+                        </Badge>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <div className="grid grid-cols-2 gap-2 text-sm">
+                        <div className="flex items-center gap-2">
+                          <IndianRupee className="h-4 w-4 text-muted-foreground" />
+                          <span className="font-semibold">₹{equip.price_per_day}/day</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <MapPin className="h-4 w-4 text-muted-foreground" />
+                          <span>{equip.district || equip.location}</span>
+                        </div>
+                      </div>
+                      {equip.description && (
+                        <p className="text-sm text-muted-foreground line-clamp-2">{equip.description}</p>
+                      )}
+                      <div className="flex gap-2 pt-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => toggleEquipmentAvailability(equip.id, equip.is_available)}
+                          disabled={updatingId === equip.id}
+                        >
+                          {updatingId === equip.id ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : equip.is_available ? (
+                            <><EyeOff className="h-4 w-4 mr-1" /> Hide</>
+                          ) : (
+                            <><Eye className="h-4 w-4 mr-1" /> Show</>
+                          )}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={() => deleteEquipment(equip.id)}
+                          disabled={deletingId === equip.id}
+                        >
+                          {deletingId === equip.id ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <><Trash2 className="h-4 w-4 mr-1" /> Delete</>
+                          )}
+                        </Button>
+                      </div>
                     </CardContent>
                   </Card>
                 ))}
