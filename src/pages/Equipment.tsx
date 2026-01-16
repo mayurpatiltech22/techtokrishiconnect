@@ -8,12 +8,13 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
-import { Search, MapPin, Calendar, Loader2, Tractor, IndianRupee, Clock, Wrench } from 'lucide-react';
+import { Search, MapPin, Calendar, Loader2, Tractor, IndianRupee, Clock, Wrench, Plus } from 'lucide-react';
+import { AddEquipmentForm } from '@/components/AddEquipmentForm';
 
 interface Equipment {
   id: string;
@@ -63,6 +64,7 @@ export default function Equipment() {
     notes: ''
   });
   const [isBooking, setIsBooking] = useState(false);
+  const [showAddEquipment, setShowAddEquipment] = useState(false);
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -166,6 +168,20 @@ export default function Equipment() {
             </h1>
             <p className="text-muted-foreground">Rent tractors, harvesters, and farming tools at affordable rates</p>
           </div>
+          <Button 
+            onClick={() => {
+              if (!user) {
+                toast({ title: 'Please login to list equipment', variant: 'destructive' });
+                navigate('/auth');
+                return;
+              }
+              setShowAddEquipment(true);
+            }}
+            className="flex items-center gap-2"
+          >
+            <Plus className="h-4 w-4" />
+            List Your Equipment
+          </Button>
         </div>
 
         {/* Filters */}
@@ -349,6 +365,13 @@ export default function Equipment() {
           </form>
         </DialogContent>
       </Dialog>
+
+      {/* Add Equipment Form */}
+      <AddEquipmentForm
+        isOpen={showAddEquipment}
+        onClose={() => setShowAddEquipment(false)}
+        onSuccess={() => fetchEquipment()}
+      />
 
       <Footer />
     </div>
