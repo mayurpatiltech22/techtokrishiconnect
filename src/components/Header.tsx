@@ -57,7 +57,9 @@ export const Header = () => {
           <Link to="/products" className="text-sm font-medium hover:text-primary transition-colors">Products</Link>
           <Link to="/labor" className="text-sm font-medium hover:text-primary transition-colors">Labor</Link>
           <Link to="/equipment" className="text-sm font-medium hover:text-primary transition-colors">Equipment</Link>
-          <button onClick={() => scrollToSection('schemes')} className="text-sm font-medium hover:text-primary transition-colors">Schemes</button>
+          <Link to="/schemes" className="text-sm font-medium hover:text-primary transition-colors">Schemes</Link>
+          <Link to="/weather" className="text-sm font-medium hover:text-primary transition-colors">Weather</Link>
+          <Link to="/market-prices" className="text-sm font-medium hover:text-primary transition-colors">Market Prices</Link>
           
           <Link to="/cart" className="relative">
             <Button variant="ghost" size="icon">
@@ -122,8 +124,9 @@ export const Header = () => {
                 <Link to="/products" onClick={() => setMobileMenuOpen(false)} className="text-lg font-medium hover:text-primary transition-colors">Products</Link>
                 <Link to="/labor" onClick={() => setMobileMenuOpen(false)} className="text-lg font-medium hover:text-primary transition-colors">Labor</Link>
                 <Link to="/equipment" onClick={() => setMobileMenuOpen(false)} className="text-lg font-medium hover:text-primary transition-colors">Equipment</Link>
-                <button onClick={() => scrollToSection('schemes')} className="text-lg font-medium hover:text-primary transition-colors text-left">Schemes</button>
-                <button onClick={() => scrollToSection('weather')} className="text-lg font-medium hover:text-primary transition-colors text-left">Weather</button>
+                <Link to="/schemes" onClick={() => setMobileMenuOpen(false)} className="text-lg font-medium hover:text-primary transition-colors">Schemes</Link>
+                <Link to="/weather" onClick={() => setMobileMenuOpen(false)} className="text-lg font-medium hover:text-primary transition-colors">Weather</Link>
+                <Link to="/market-prices" onClick={() => setMobileMenuOpen(false)} className="text-lg font-medium hover:text-primary transition-colors">Market Prices</Link>
                 
                 {user ? (
                   <>
