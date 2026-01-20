@@ -5,13 +5,16 @@ import { useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCart } from "@/contexts/CartContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
+import { LanguageSelector } from "@/components/LanguageSelector";
 
 export const Header = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { user, signOut } = useAuth();
   const { totalItems } = useCart();
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -54,12 +57,14 @@ export const Header = () => {
         </Link>
         
         <nav className="hidden md:flex items-center gap-6">
-          <Link to="/products" className="text-sm font-medium hover:text-primary transition-colors">Products</Link>
-          <Link to="/labor" className="text-sm font-medium hover:text-primary transition-colors">Labor</Link>
-          <Link to="/equipment" className="text-sm font-medium hover:text-primary transition-colors">Equipment</Link>
-          <Link to="/schemes" className="text-sm font-medium hover:text-primary transition-colors">Schemes</Link>
-          <Link to="/weather" className="text-sm font-medium hover:text-primary transition-colors">Weather</Link>
-          <Link to="/market-prices" className="text-sm font-medium hover:text-primary transition-colors">Market Prices</Link>
+          <Link to="/products" className="text-sm font-medium hover:text-primary transition-colors">{t('nav.products')}</Link>
+          <Link to="/labor" className="text-sm font-medium hover:text-primary transition-colors">{t('nav.labor')}</Link>
+          <Link to="/equipment" className="text-sm font-medium hover:text-primary transition-colors">{t('nav.equipment')}</Link>
+          <Link to="/schemes" className="text-sm font-medium hover:text-primary transition-colors">{t('nav.schemes')}</Link>
+          <Link to="/weather" className="text-sm font-medium hover:text-primary transition-colors">{t('nav.weather')}</Link>
+          <Link to="/market-prices" className="text-sm font-medium hover:text-primary transition-colors">{t('nav.market')}</Link>
+          
+          <LanguageSelector />
           
           <Link to="/cart" className="relative">
             <Button variant="ghost" size="icon">
@@ -82,15 +87,15 @@ export const Header = () => {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem onClick={() => navigate('/orders')}>
-                  My Orders
+                  {t('nav.orders')}
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => navigate('/my-bookings')}>
                   <Calendar className="h-4 w-4 mr-2" />
-                  My Bookings
+                  {t('nav.myBookings')}
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={handleSignOut}>
                   <LogOut className="h-4 w-4 mr-2" />
-                  Sign Out
+                  {t('nav.logout')}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -120,26 +125,29 @@ export const Header = () => {
               </Button>
             </SheetTrigger>
             <SheetContent side="right" className="w-[300px]">
-            <nav className="flex flex-col gap-4 mt-8">
-                <Link to="/products" onClick={() => setMobileMenuOpen(false)} className="text-lg font-medium hover:text-primary transition-colors">Products</Link>
-                <Link to="/labor" onClick={() => setMobileMenuOpen(false)} className="text-lg font-medium hover:text-primary transition-colors">Labor</Link>
-                <Link to="/equipment" onClick={() => setMobileMenuOpen(false)} className="text-lg font-medium hover:text-primary transition-colors">Equipment</Link>
-                <Link to="/schemes" onClick={() => setMobileMenuOpen(false)} className="text-lg font-medium hover:text-primary transition-colors">Schemes</Link>
-                <Link to="/weather" onClick={() => setMobileMenuOpen(false)} className="text-lg font-medium hover:text-primary transition-colors">Weather</Link>
-                <Link to="/market-prices" onClick={() => setMobileMenuOpen(false)} className="text-lg font-medium hover:text-primary transition-colors">Market Prices</Link>
+              <div className="flex justify-end mt-4">
+                <LanguageSelector />
+              </div>
+              <nav className="flex flex-col gap-4 mt-4">
+                <Link to="/products" onClick={() => setMobileMenuOpen(false)} className="text-lg font-medium hover:text-primary transition-colors">{t('nav.products')}</Link>
+                <Link to="/labor" onClick={() => setMobileMenuOpen(false)} className="text-lg font-medium hover:text-primary transition-colors">{t('nav.labor')}</Link>
+                <Link to="/equipment" onClick={() => setMobileMenuOpen(false)} className="text-lg font-medium hover:text-primary transition-colors">{t('nav.equipment')}</Link>
+                <Link to="/schemes" onClick={() => setMobileMenuOpen(false)} className="text-lg font-medium hover:text-primary transition-colors">{t('nav.schemes')}</Link>
+                <Link to="/weather" onClick={() => setMobileMenuOpen(false)} className="text-lg font-medium hover:text-primary transition-colors">{t('nav.weather')}</Link>
+                <Link to="/market-prices" onClick={() => setMobileMenuOpen(false)} className="text-lg font-medium hover:text-primary transition-colors">{t('nav.market')}</Link>
                 
                 {user ? (
                   <>
-                    <Link to="/orders" onClick={() => setMobileMenuOpen(false)} className="text-lg font-medium hover:text-primary transition-colors">My Orders</Link>
-                    <Link to="/my-bookings" onClick={() => setMobileMenuOpen(false)} className="text-lg font-medium hover:text-primary transition-colors">My Bookings</Link>
+                    <Link to="/orders" onClick={() => setMobileMenuOpen(false)} className="text-lg font-medium hover:text-primary transition-colors">{t('nav.orders')}</Link>
+                    <Link to="/my-bookings" onClick={() => setMobileMenuOpen(false)} className="text-lg font-medium hover:text-primary transition-colors">{t('nav.myBookings')}</Link>
                     <Button variant="outline" onClick={handleSignOut}>
                       <LogOut className="h-4 w-4 mr-2" />
-                      Sign Out
+                      {t('nav.logout')}
                     </Button>
                   </>
                 ) : (
                   <Button variant="default" className="bg-gradient-primary mt-4" asChild>
-                    <Link to="/auth" onClick={() => setMobileMenuOpen(false)}>Sign In</Link>
+                    <Link to="/auth" onClick={() => setMobileMenuOpen(false)}>{t('nav.login')}</Link>
                   </Button>
                 )}
               </nav>
