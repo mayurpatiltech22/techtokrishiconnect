@@ -78,6 +78,48 @@ const cities: CityInfo[] = [
   { city: "Patna", state: "Bihar" },
 ];
 
+// Fallback static weather data when API is unavailable
+const getFallbackWeatherData = (cityName: string): WeatherData => {
+  const baseTemp = Math.floor(Math.random() * 10) + 25; // 25-35°C
+  const conditions = ["Clear", "Clouds", "Haze", "Mist"];
+  const condition = conditions[Math.floor(Math.random() * conditions.length)];
+  
+  const today = new Date();
+  const forecast = Array.from({ length: 7 }, (_, i) => {
+    const date = new Date(today);
+    date.setDate(date.getDate() + i);
+    const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    return {
+      day: i === 0 ? 'Today' : dayNames[date.getDay()],
+      date: date.toLocaleDateString('en-IN', { month: 'short', day: 'numeric' }),
+      high: baseTemp + Math.floor(Math.random() * 5),
+      low: baseTemp - 5 - Math.floor(Math.random() * 3),
+      condition: conditions[Math.floor(Math.random() * conditions.length)],
+      icon: "01d",
+      rainChance: Math.floor(Math.random() * 30)
+    };
+  });
+
+  return {
+    current: {
+      city: cityName,
+      temp: baseTemp,
+      feelsLike: baseTemp + 2,
+      humidity: 55 + Math.floor(Math.random() * 20),
+      pressure: 1010 + Math.floor(Math.random() * 10),
+      windSpeed: 10 + Math.floor(Math.random() * 15),
+      visibility: 8 + Math.floor(Math.random() * 4),
+      condition,
+      description: condition.toLowerCase(),
+      icon: "01d",
+      sunrise: "06:15",
+      sunset: "18:45",
+      uvIndex: 5
+    },
+    forecast
+  };
+};
+
 const getWeatherIcon = (condition: string) => {
   const lowerCondition = condition.toLowerCase();
   if (lowerCondition.includes("rain") || lowerCondition.includes("shower") || lowerCondition.includes("drizzle")) return CloudRain;
@@ -111,6 +153,8 @@ const Weather = () => {
       city.state.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const [usingFallback, setUsingFallback] = useState(false);
+
   const fetchWeather = async (cityName: string, isRefresh = false) => {
     if (isRefresh) {
       setRefreshing(true);
@@ -132,6 +176,7 @@ const Weather = () => {
       }
 
       setWeatherData(data);
+      setUsingFallback(false);
       
       // Cache the weather for city list
       setCityWeatherCache(prev => {
@@ -143,15 +188,28 @@ const Weather = () => {
         return newCache;
       });
     } catch (error) {
-      console.error('Error fetching weather:', error);
-      toast.error(t('weather.error'));
+      console.error('Error fetching weather, using fallback data:', error);
+      // Use fallback static data instead of showing error
+      const fallbackData = getFallbackWeatherData(cityName);
+      setWeatherData(fallbackData);
+      setUsingFallback(true);
+      
+      // Cache fallback data too
+      setCityWeatherCache(prev => {
+        const newCache = new Map(prev);
+        newCache.set(cityName, {
+          temp: fallbackData.current.temp,
+          condition: fallbackData.current.condition
+        });
+        return newCache;
+      });
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
   };
 
-  // Fetch weather for all cities in background
+  // Fetch weather for all cities in background with fallback
   const fetchAllCitiesWeather = async () => {
     for (const city of cities) {
       if (!cityWeatherCache.has(city.city)) {
@@ -168,9 +226,20 @@ const Weather = () => {
               });
               return newCache;
             });
+          } else {
+            throw new Error('No data');
           }
         } catch (e) {
-          // Silent fail for background fetch
+          // Use fallback data for failed cities
+          const fallback = getFallbackWeatherData(city.city);
+          setCityWeatherCache(prev => {
+            const newCache = new Map(prev);
+            newCache.set(city.city, {
+              temp: fallback.current.temp,
+              condition: fallback.current.condition
+            });
+            return newCache;
+          });
         }
       }
     }
@@ -285,12 +354,17 @@ const Weather = () => {
                       <div className="bg-gradient-to-br from-blue-500 to-cyan-500 p-6 text-white">
                         <div className="flex items-start justify-between">
                           <div>
-                            <div className="flex items-center gap-2 mb-2">
+                            <div className="flex items-center gap-2 mb-2 flex-wrap">
                               <MapPin className="h-5 w-5" />
                               <h2 className="text-2xl font-bold">{weatherData.current.city}</h2>
                               <Badge variant="secondary" className="bg-white/20 text-white hover:bg-white/30">
                                 {selectedCity.state}
                               </Badge>
+                              {usingFallback && (
+                                <Badge variant="outline" className="bg-amber-500/20 text-white border-amber-300">
+                                  Demo Data
+                                </Badge>
+                              )}
                             </div>
                             <div className="text-7xl font-bold mb-2">{weatherData.current.temp}°C</div>
                             <p className="text-xl opacity-90">{weatherData.current.condition}</p>
