@@ -155,6 +155,16 @@ const Weather = () => {
 
   const [usingFallback, setUsingFallback] = useState(false);
 
+  // If we had to fall back to demo data (e.g., temporary upstream outage),
+  // keep retrying in the background so the UI switches back to live weather automatically.
+  useEffect(() => {
+    if (!usingFallback) return;
+    const id = window.setTimeout(() => {
+      fetchWeather(selectedCity.city, true);
+    }, 30_000);
+    return () => window.clearTimeout(id);
+  }, [usingFallback, selectedCity.city]);
+
   const fetchWeather = async (cityName: string, isRefresh = false) => {
     if (isRefresh) {
       setRefreshing(true);
@@ -361,7 +371,7 @@ const Weather = () => {
                                 {selectedCity.state}
                               </Badge>
                               {usingFallback && (
-                                <Badge variant="outline" className="bg-amber-500/20 text-white border-amber-300">
+                                <Badge variant="outline" className="bg-muted/40 text-foreground border-border">
                                   Demo Data
                                 </Badge>
                               )}
