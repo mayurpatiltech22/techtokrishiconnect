@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { CropAdvisory } from "@/components/CropAdvisory";
+import { WeatherAlerts } from "@/components/WeatherAlerts";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -477,6 +478,9 @@ const Weather = () => {
                         </div>
                       </CardContent>
                     </Card>
+
+                    {/* Weather Alerts */}
+                    <WeatherAlerts weatherData={weatherData} />
                   </>
                 ) : (
                   <Card className="p-12">
