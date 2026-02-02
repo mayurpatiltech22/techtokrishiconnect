@@ -1,16 +1,19 @@
-# Welcome to your Lovable project
+# Welcome to our agriconnect project
 
 ## Project info
 
-**URL**: https://lovable.dev/projects/e5613a9a-a8b0-4378-a73b-30da929e4a58
+**URL**: https://techtokrishiconnect.netlify.app
 
 ## How can I edit this code?
 
 There are several ways of editing your application.
+**Project Decription**
+Our project is a smart agriculture platform that helps farmers reduce costs and increase productivity. Farmers can buy seeds, fertilizers, and other inputs directly from companies at lower prices. The platform also connects farmers with landless labour groups for farming work.
+It provides access to government schemes, 24×7 weather updates, live market prices, and farm equipment rental like tractors and tools. This solution makes farming more affordable, connected, and technology-driven.
 
-**Use Lovable**
+**we have Used Lovable ai here**
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/e5613a9a-a8b0-4378-a73b-30da929e4a58) and start prompting.
+**Deployment link**: https://techtokrishiconnect.netlify.app
 
 Changes made via Lovable will be committed automatically to this repo.
 
@@ -64,10 +67,3 @@ This project is built with:
 
 Simply open [Lovable](https://lovable.dev/projects/e5613a9a-a8b0-4378-a73b-30da929e4a58) and click on Share -> Publish.
 
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
