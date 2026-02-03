@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { TrendingUp, TrendingDown, BarChart3 } from "lucide-react";
+import { TrendingUp, TrendingDown, BarChart3, ArrowRight } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { PriceHistoryChart } from "./PriceHistoryChart";
+import { Link } from "react-router-dom";
 
 interface MarketPrice {
   crop_name: string;
@@ -22,6 +23,7 @@ interface SelectedCrop {
 
 export const MarketPrices = () => {
   const [prices, setPrices] = useState<{ [key: string]: MarketPrice[] }>({
+    Mumbai: [],
     Pune: [],
     Nashik: [],
   });
@@ -29,6 +31,7 @@ export const MarketPrices = () => {
   const [lastUpdated, setLastUpdated] = useState<string>("");
   const [selectedCrop, setSelectedCrop] = useState<SelectedCrop | null>(null);
   const [isChartOpen, setIsChartOpen] = useState(false);
+  const [totalCrops, setTotalCrops] = useState(0);
 
   useEffect(() => {
     fetchMarketPrices();
@@ -36,78 +39,54 @@ export const MarketPrices = () => {
 
   const fetchMarketPrices = async () => {
     try {
-      // Fetch today's latest prices
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      
-      const yesterday = new Date(today);
-      yesterday.setDate(yesterday.getDate() - 1);
-
-      // Get latest prices for each crop/market combination
+      // Fetch latest prices
       const { data: latestPrices, error: latestError } = await supabase
         .from("market_prices")
         .select("*")
-        .gte("recorded_at", yesterday.toISOString())
-        .order("recorded_at", { ascending: false });
+        .order("recorded_at", { ascending: false })
+        .limit(500);
 
       if (latestError) throw latestError;
 
-      // Get previous day prices for comparison
-      const twoDaysAgo = new Date(yesterday);
-      twoDaysAgo.setDate(twoDaysAgo.getDate() - 1);
-
-      const { data: previousPrices, error: prevError } = await supabase
-        .from("market_prices")
-        .select("*")
-        .gte("recorded_at", twoDaysAgo.toISOString())
-        .lt("recorded_at", yesterday.toISOString())
-        .order("recorded_at", { ascending: false });
-
-      if (prevError) throw prevError;
-
       // Process prices by district
       const pricesByDistrict: { [key: string]: MarketPrice[] } = {
+        Mumbai: [],
         Pune: [],
         Nashik: [],
       };
 
-      // Create a map for previous prices
-      const prevPriceMap: { [key: string]: number } = {};
-      previousPrices?.forEach((p) => {
-        const key = `${p.crop_name}-${p.market_name}`;
-        if (!prevPriceMap[key]) {
-          prevPriceMap[key] = p.price;
-        }
-      });
-
       // Get unique latest prices per crop/market
       const seenCrops: { [key: string]: boolean } = {};
+      const uniqueCrops = new Set<string>();
       
       latestPrices?.forEach((p) => {
         const key = `${p.crop_name}-${p.market_name}`;
+        uniqueCrops.add(p.crop_name);
+        
         if (!seenCrops[key]) {
           seenCrops[key] = true;
-          const previousPrice = prevPriceMap[key] || null;
           
           const priceData: MarketPrice = {
             crop_name: p.crop_name,
             market_name: p.market_name,
             district: p.district,
             price: p.price,
-            previousPrice,
+            previousPrice: null,
           };
 
-          if (p.district === "Pune") {
-            pricesByDistrict.Pune.push(priceData);
-          } else if (p.district === "Nashik") {
-            pricesByDistrict.Nashik.push(priceData);
+          if (pricesByDistrict[p.district]) {
+            pricesByDistrict[p.district].push(priceData);
           }
         }
       });
 
       setPrices(pricesByDistrict);
+      setTotalCrops(uniqueCrops.size);
       setLastUpdated(latestPrices?.[0]?.recorded_at ? 
-        new Date(latestPrices[0].recorded_at).toLocaleString() : 
+        new Date(latestPrices[0].recorded_at).toLocaleString('en-IN', { 
+          dateStyle: 'medium', 
+          timeStyle: 'short' 
+        }) : 
         "Just now"
       );
     } catch (error) {
@@ -190,11 +169,16 @@ export const MarketPrices = () => {
   return (
     <>
       <Card className="shadow-card border-2">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <TrendingUp className="h-6 w-6 text-accent" />
-            Live Market Prices
-          </CardTitle>
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2">
+              <TrendingUp className="h-6 w-6 text-accent" />
+              Live Market Prices
+            </CardTitle>
+            <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full font-medium">
+              {totalCrops}+ Crops
+            </span>
+          </div>
         </CardHeader>
         <CardContent>
           {loading ? (
@@ -202,22 +186,33 @@ export const MarketPrices = () => {
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
             </div>
           ) : (
-            <Tabs defaultValue="pune" className="w-full">
-              <TabsList className="grid w-full grid-cols-2 mb-4">
-                <TabsTrigger value="pune">Pune ({prices.Pune.length})</TabsTrigger>
-                <TabsTrigger value="nashik">Nashik ({prices.Nashik.length})</TabsTrigger>
+            <Tabs defaultValue="mumbai" className="w-full">
+              <TabsList className="grid w-full grid-cols-3 mb-4">
+                <TabsTrigger value="mumbai">Mumbai</TabsTrigger>
+                <TabsTrigger value="pune">Pune</TabsTrigger>
+                <TabsTrigger value="nashik">Nashik</TabsTrigger>
               </TabsList>
+              <TabsContent value="mumbai">
+                {renderPriceList(prices.Mumbai.slice(0, 5))}
+              </TabsContent>
               <TabsContent value="pune">
-                {renderPriceList(prices.Pune)}
+                {renderPriceList(prices.Pune.slice(0, 5))}
               </TabsContent>
               <TabsContent value="nashik">
-                {renderPriceList(prices.Nashik)}
+                {renderPriceList(prices.Nashik.slice(0, 5))}
               </TabsContent>
             </Tabs>
           )}
-          <p className="text-xs text-muted-foreground text-center mt-4">
-            Last updated: {lastUpdated || "Loading..."}
-          </p>
+          <div className="flex items-center justify-between mt-4 pt-4 border-t">
+            <p className="text-xs text-muted-foreground">
+              Updated: {lastUpdated || "Loading..."}
+            </p>
+            <Button asChild variant="ghost" size="sm" className="text-primary">
+              <Link to="/market-prices">
+                View All <ArrowRight className="ml-1 h-4 w-4" />
+              </Link>
+            </Button>
+          </div>
         </CardContent>
       </Card>
 
