@@ -1,7 +1,8 @@
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Sprout, Users, Scroll, CloudRain, TrendingUp, Tractor, LucideIcon } from "lucide-react";
+import { Sprout, Users, Scroll, CloudRain, TrendingUp, Tractor, LucideIcon, ArrowRight } from "lucide-react";
+import { motion } from "framer-motion";
 
 interface ServiceItemProps {
   icon: LucideIcon;
@@ -10,9 +11,10 @@ interface ServiceItemProps {
   action: string;
   link?: string;
   scrollTo?: string;
+  index: number;
 }
 
-const ServiceItem = ({ icon: Icon, title, description, action, link, scrollTo }: ServiceItemProps) => {
+const ServiceItem = ({ icon: Icon, title, description, action, link, scrollTo, index }: ServiceItemProps) => {
   const handleClick = () => {
     if (scrollTo) {
       const element = document.getElementById(scrollTo);
@@ -23,31 +25,42 @@ const ServiceItem = ({ icon: Icon, title, description, action, link, scrollTo }:
   };
 
   return (
-    <Card className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
-      <CardHeader>
-        <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
-          <Icon className="h-6 w-6 text-primary" />
-        </div>
-        <CardTitle className="text-xl">{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
-      </CardHeader>
-      <CardContent>
-        {link ? (
-          <Button asChild className="w-full">
-            <Link to={link}>{action}</Link>
-          </Button>
-        ) : (
-          <Button className="w-full" onClick={handleClick}>
-            {action}
-          </Button>
-        )}
-      </CardContent>
-    </Card>
+    <motion.div
+      initial={{ opacity: 0, y: 30 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.5, delay: index * 0.1 }}
+    >
+      <Card className="group h-full hover:shadow-elevated transition-all duration-300 hover:-translate-y-2 border-0 bg-card/80 backdrop-blur-sm">
+        <CardHeader className="pb-4">
+          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+            <Icon className="h-7 w-7 text-primary" />
+          </div>
+          <CardTitle className="text-xl group-hover:text-primary transition-colors">{title}</CardTitle>
+          <CardDescription className="text-base leading-relaxed">{description}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {link ? (
+            <Button asChild variant="ghost" className="w-full justify-between group/btn hover:bg-primary/10">
+              <Link to={link}>
+                {action}
+                <ArrowRight className="h-4 w-4 group-hover/btn:translate-x-1 transition-transform" />
+              </Link>
+            </Button>
+          ) : (
+            <Button variant="ghost" className="w-full justify-between group/btn hover:bg-primary/10" onClick={handleClick}>
+              {action}
+              <ArrowRight className="h-4 w-4 group-hover/btn:translate-x-1 transition-transform" />
+            </Button>
+          )}
+        </CardContent>
+      </Card>
+    </motion.div>
   );
 };
 
 export const ServicesSection = () => {
-  const services: ServiceItemProps[] = [
+  const services = [
     {
       icon: Sprout,
       title: "Seeds & Fertilizers",
@@ -93,17 +106,26 @@ export const ServicesSection = () => {
   ];
 
   return (
-    <section id="services" className="py-16 md:py-24 bg-gradient-hero">
+    <section id="services" className="py-20 md:py-28 bg-muted/30">
       <div className="container px-4">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">Our Services</h2>
+        <motion.div 
+          className="text-center mb-16"
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5 }}
+        >
+          <span className="inline-block px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium mb-4">
+            What We Offer
+          </span>
+          <h2 className="text-3xl md:text-4xl font-bold mb-4">Complete Farming Solutions</h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Comprehensive solutions designed specifically for Maharashtra farmers
+            Everything you need to succeed, designed specifically for Maharashtra farmers
           </p>
-        </div>
+        </motion.div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {services.map((service, index) => (
-            <ServiceItem key={index} {...service} />
+            <ServiceItem key={index} {...service} index={index} />
           ))}
         </div>
       </div>
