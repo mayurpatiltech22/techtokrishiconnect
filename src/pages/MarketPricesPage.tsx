@@ -29,37 +29,37 @@ interface CropCategory {
 const cropCategories: CropCategory[] = [
   {
     name: "Cereals",
-    crops: ["Wheat", "Rice", "Maize", "Bajra", "Jowar"],
+    crops: ["Wheat", "Rice (Basmati)", "Rice (Common)", "Maize", "Bajra (Pearl Millet)", "Jowar (Sorghum)", "Ragi"],
     icon: <Wheat className="h-4 w-4" />
   },
   {
     name: "Pulses",
-    crops: ["Chana (Gram)", "Tur Dal", "Moong Dal", "Urad Dal"],
+    crops: ["Chana (Gram)", "Tur Dal (Arhar)", "Moong Dal", "Urad Dal", "Masoor Dal"],
     icon: <Leaf className="h-4 w-4" />
   },
   {
     name: "Oilseeds",
-    crops: ["Soybean", "Groundnut", "Mustard", "Cotton"],
+    crops: ["Soybean", "Groundnut", "Mustard", "Sunflower", "Sesame (Til)"],
     icon: <Leaf className="h-4 w-4" />
   },
   {
     name: "Vegetables",
-    crops: ["Onion", "Potato", "Tomato", "Garlic", "Ginger"],
+    crops: ["Onion", "Potato", "Tomato", "Garlic", "Ginger", "Green Chilli", "Cabbage", "Cauliflower"],
     icon: <Apple className="h-4 w-4" />
   },
   {
     name: "Fruits",
-    crops: ["Banana", "Mango", "Orange", "Pomegranate", "Grapes"],
+    crops: ["Banana", "Mango (Alphonso)", "Orange", "Pomegranate", "Grapes", "Apple"],
     icon: <Apple className="h-4 w-4" />
   },
   {
     name: "Spices",
-    crops: ["Turmeric", "Ginger", "Garlic"],
+    crops: ["Turmeric", "Red Chilli", "Cumin (Jeera)", "Coriander"],
     icon: <Leaf className="h-4 w-4" />
   },
   {
     name: "Cash Crops",
-    crops: ["Sugarcane", "Cotton"],
+    crops: ["Cotton", "Sugarcane", "Jute"],
     icon: <Wheat className="h-4 w-4" />
   }
 ];
