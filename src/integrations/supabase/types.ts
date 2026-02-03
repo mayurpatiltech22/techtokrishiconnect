@@ -392,6 +392,30 @@ export type Database = {
         }
         Relationships: []
       }
+      otp_codes: {
+        Row: {
+          created_at: string
+          expires_at: string
+          id: string
+          otp: string
+          phone: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at: string
+          id?: string
+          otp: string
+          phone: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          otp?: string
+          phone?: string
+        }
+        Relationships: []
+      }
       products: {
         Row: {
           category_id: string | null

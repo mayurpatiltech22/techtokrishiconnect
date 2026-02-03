@@ -1,13 +1,11 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
-
-// Store OTPs temporarily (in production, use Redis or database)
-const otpStore = new Map<string, { otp: string; expires: number }>();
 
 function generateOTP(): string {
   return Math.floor(100000 + Math.random() * 900000).toString();
@@ -38,6 +36,8 @@ serve(async (req) => {
     const TWILIO_ACCOUNT_SID = Deno.env.get("TWILIO_ACCOUNT_SID");
     const TWILIO_AUTH_TOKEN = Deno.env.get("TWILIO_AUTH_TOKEN");
     const TWILIO_PHONE_NUMBER = Deno.env.get("TWILIO_PHONE_NUMBER");
+    const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
+    const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
     if (!TWILIO_ACCOUNT_SID || !TWILIO_AUTH_TOKEN || !TWILIO_PHONE_NUMBER) {
       console.error("Missing Twilio credentials");
@@ -47,12 +47,43 @@ serve(async (req) => {
       );
     }
 
-    if (action === "send") {
-      const otp = generateOTP();
-      const expires = Date.now() + 10 * 60 * 1000; // 10 minutes
+    if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+      console.error("Missing Supabase credentials");
+      return new Response(
+        JSON.stringify({ error: "Database service not configured" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
-      // Store OTP
-      otpStore.set(formattedPhone, { otp, expires });
+    // Create Supabase client with service role key
+    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+
+    if (action === "send") {
+      const otpCode = generateOTP();
+      const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
+      // Delete any existing OTPs for this phone
+      await supabase
+        .from("otp_codes")
+        .delete()
+        .eq("phone", formattedPhone);
+
+      // Store new OTP in database
+      const { error: insertError } = await supabase
+        .from("otp_codes")
+        .insert({
+          phone: formattedPhone,
+          otp: otpCode,
+          expires_at: expiresAt.toISOString(),
+        });
+
+      if (insertError) {
+        console.error("Error storing OTP:", insertError);
+        return new Response(
+          JSON.stringify({ error: "Failed to generate OTP" }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
 
       // Send SMS via Twilio
       const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${TWILIO_ACCOUNT_SID}/Messages.json`;
@@ -67,13 +98,18 @@ serve(async (req) => {
         body: new URLSearchParams({
           From: TWILIO_PHONE_NUMBER,
           To: formattedPhone,
-          Body: `Your KrishiConnect verification code is: ${otp}. Valid for 10 minutes.`,
+          Body: `Your KrishiConnect verification code is: ${otpCode}. Valid for 10 minutes.`,
         }),
       });
 
       if (!response.ok) {
         const errorData = await response.json();
         console.error("Twilio error:", errorData);
+        // Clean up the stored OTP since SMS failed
+        await supabase
+          .from("otp_codes")
+          .delete()
+          .eq("phone", formattedPhone);
         return new Response(
           JSON.stringify({ error: "Failed to send OTP. Please check your phone number." }),
           { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -87,32 +123,47 @@ serve(async (req) => {
       );
 
     } else if (action === "verify") {
-      const stored = otpStore.get(formattedPhone);
+      // Get stored OTP from database
+      const { data: otpRecord, error: fetchError } = await supabase
+        .from("otp_codes")
+        .select("*")
+        .eq("phone", formattedPhone)
+        .single();
 
-      if (!stored) {
+      if (fetchError || !otpRecord) {
+        console.log("No OTP found for phone:", formattedPhone);
         return new Response(
           JSON.stringify({ error: "No OTP found. Please request a new one." }),
           { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
 
-      if (Date.now() > stored.expires) {
-        otpStore.delete(formattedPhone);
+      if (new Date() > new Date(otpRecord.expires_at)) {
+        // Delete expired OTP
+        await supabase
+          .from("otp_codes")
+          .delete()
+          .eq("phone", formattedPhone);
         return new Response(
           JSON.stringify({ error: "OTP expired. Please request a new one." }),
           { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
 
-      if (stored.otp !== otp) {
+      if (otpRecord.otp !== otp) {
         return new Response(
           JSON.stringify({ error: "Invalid OTP. Please try again." }),
           { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
 
-      // OTP verified successfully
-      otpStore.delete(formattedPhone);
+      // OTP verified successfully - delete it
+      await supabase
+        .from("otp_codes")
+        .delete()
+        .eq("phone", formattedPhone);
+
+      console.log("OTP verified successfully for:", formattedPhone);
       return new Response(
         JSON.stringify({ success: true, verified: true }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
