@@ -1,5 +1,6 @@
 import { SchemeCard } from "./SchemeCard";
 import { Scroll } from "lucide-react";
+import { motion } from "framer-motion";
 
 export const SchemesSection = () => {
   const schemes = [
@@ -50,20 +51,35 @@ export const SchemesSection = () => {
   ];
 
   return (
-    <section className="py-16 md:py-24 bg-background">
+    <section className="py-20 md:py-28 bg-background">
       <div className="container px-4">
-        <div className="text-center mb-12">
-          <div className="flex items-center justify-center gap-2 mb-4">
-            <Scroll className="h-8 w-8 text-accent" />
-            <h2 className="text-3xl md:text-4xl font-bold">Government Schemes</h2>
-          </div>
+        <motion.div 
+          className="text-center mb-16"
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5 }}
+        >
+          <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-accent/10 text-accent text-sm font-medium mb-4">
+            <Scroll className="h-4 w-4" />
+            Government Schemes
+          </span>
+          <h2 className="text-3xl md:text-4xl font-bold mb-4">Subsidies & Benefits</h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
             Access various subsidies and benefits available for Maharashtra farmers
           </p>
-        </div>
+        </motion.div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {schemes.map((scheme, index) => (
-            <SchemeCard key={index} {...scheme} />
+            <motion.div
+              key={index}
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: index * 0.1 }}
+            >
+              <SchemeCard {...scheme} />
+            </motion.div>
           ))}
         </div>
       </div>
