@@ -19,7 +19,8 @@ serve(async (req) => {
   }
 
   try {
-    const { phone, action } = await req.json();
+    const body = await req.json();
+    const { phone, action, otp } = body;
 
     if (!phone) {
       return new Response(
@@ -86,7 +87,6 @@ serve(async (req) => {
       );
 
     } else if (action === "verify") {
-      const { otp } = await req.json();
       const stored = otpStore.get(formattedPhone);
 
       if (!stored) {
