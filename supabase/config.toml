@@ -5,3 +5,9 @@ verify_jwt = false
 
 [functions.send-otp]
 verify_jwt = false
+
+[functions.fetch-mandi-prices]
+verify_jwt = false
+
+[functions.update-market-prices]
+verify_jwt = false

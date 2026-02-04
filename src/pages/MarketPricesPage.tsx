@@ -7,9 +7,10 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { TrendingUp, TrendingDown, Search, BarChart3, MapPin, RefreshCw, Wheat, Apple, Leaf } from "lucide-react";
+import { TrendingUp, TrendingDown, Search, BarChart3, MapPin, RefreshCw, Wheat, Apple, Leaf, CloudDownload, CheckCircle2, AlertCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { PriceHistoryChart } from "@/components/PriceHistoryChart";
+import { toast } from "sonner";
 
 interface MarketPrice {
   crop_name: string;
@@ -83,10 +84,12 @@ const cities = [
 const MarketPricesPage = () => {
   const [prices, setPrices] = useState<MarketPrice[]>([]);
   const [loading, setLoading] = useState(true);
+  const [syncing, setSyncing] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCity, setSelectedCity] = useState("All Cities");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [lastUpdated, setLastUpdated] = useState<string>("");
+  const [dataSource, setDataSource] = useState<"local" | "government">("local");
   const [selectedCrop, setSelectedCrop] = useState<{
     cropName: string;
     marketName: string;
@@ -158,15 +161,49 @@ const MarketPricesPage = () => {
       });
 
       setPrices(processedPrices);
-      setLastUpdated(
-        latestPrices?.[0]?.recorded_at
-          ? new Date(latestPrices[0].recorded_at).toLocaleString()
-          : "Just now"
-      );
+        setLastUpdated(
+          latestPrices?.[0]?.recorded_at
+            ? new Date(latestPrices[0].recorded_at).toLocaleString()
+            : "Just now"
+        );
+        setDataSource("local");
+      } catch (error) {
+        console.error("Error fetching market prices:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+  const syncFromGovernmentAPI = async () => {
+    setSyncing(true);
+    try {
+      toast.info("Fetching live prices from data.gov.in...");
+      
+      const { data, error } = await supabase.functions.invoke('fetch-mandi-prices', {
+        body: { action: 'sync', limit: 1000 }
+      });
+
+      if (error) {
+        console.error("Error calling fetch-mandi-prices:", error);
+        toast.error("Failed to fetch from government API. Check if API key is configured.");
+        return;
+      }
+
+      if (!data.success) {
+        toast.error(data.error || "Failed to fetch government data");
+        return;
+      }
+
+      toast.success(`Synced ${data.count} live prices from data.gov.in!`);
+      setDataSource("government");
+      
+      // Refresh local data to show synced prices
+      await fetchMarketPrices();
     } catch (error) {
-      console.error("Error fetching market prices:", error);
+      console.error("Error syncing from government API:", error);
+      toast.error("Failed to sync from government API");
     } finally {
-      setLoading(false);
+      setSyncing(false);
     }
   };
 
@@ -230,17 +267,42 @@ const MarketPricesPage = () => {
       <Header />
       <main className="flex-1">
         {/* Hero Section */}
-        <section className="bg-gradient-to-br from-green-500/20 via-emerald-500/10 to-background py-12">
+        <section className="bg-gradient-to-br from-primary/20 via-primary/10 to-background py-12">
           <div className="container px-4">
             <div className="text-center max-w-3xl mx-auto">
               <div className="flex items-center justify-center gap-3 mb-4">
-                <TrendingUp className="h-10 w-10 text-green-600" />
+                <TrendingUp className="h-10 w-10 text-primary" />
                 <h1 className="text-3xl md:text-5xl font-bold">Live Mandi Prices</h1>
               </div>
-              <p className="text-lg md:text-xl text-muted-foreground mb-8">
+              <p className="text-lg md:text-xl text-muted-foreground mb-4">
                 Real-time market prices for 25+ crops from major mandis across India.
                 Track historical trends and make informed selling decisions.
               </p>
+              
+              {/* Data Source Badge */}
+              <div className="flex items-center justify-center gap-2 mb-8">
+                {dataSource === "government" ? (
+                  <Badge variant="default" className="bg-primary text-primary-foreground">
+                    <CheckCircle2 className="h-3 w-3 mr-1" />
+                    Live from data.gov.in
+                  </Badge>
+                ) : (
+                  <Badge variant="secondary">
+                    <AlertCircle className="h-3 w-3 mr-1" />
+                    Cached Data
+                  </Badge>
+                )}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={syncFromGovernmentAPI}
+                  disabled={syncing}
+                  className="ml-2"
+                >
+                  <CloudDownload className={`h-4 w-4 mr-1 ${syncing ? "animate-pulse" : ""}`} />
+                  {syncing ? "Syncing..." : "Sync Live Prices"}
+                </Button>
+              </div>
 
               {/* Stats */}
               <div className="grid grid-cols-3 gap-4 max-w-lg mx-auto mb-8">
