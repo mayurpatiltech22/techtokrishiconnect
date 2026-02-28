@@ -116,6 +116,25 @@ export default function Labor() {
 
       if (error) throw error;
 
+      // Send WhatsApp alerts to both parties
+      try {
+        await supabase.functions.invoke('send-whatsapp-alert', {
+          body: {
+            booking_type: 'labor',
+            booker_phone: bookingData.phone,
+            owner_user_id: bookingGroup.leader_id,
+            item_name: bookingGroup.name,
+            start_date: bookingData.startDate,
+            end_date: bookingData.endDate,
+            total_amount: totalAmount,
+            location: bookingData.location,
+            workers: bookingData.workers,
+          }
+        });
+      } catch (whatsappError) {
+        console.error('WhatsApp alert failed:', whatsappError);
+      }
+
       toast({ title: 'Booking request sent successfully!' });
       setBookingGroup(null);
       setBookingData({ startDate: '', endDate: '', workers: 1, description: '', phone: '', location: '' });
