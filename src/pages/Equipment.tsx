@@ -139,6 +139,32 @@ export default function Equipment() {
 
       if (error) throw error;
 
+      // Send WhatsApp alerts to both parties - need owner_id from equipment
+      try {
+        const { data: equipData } = await supabase
+          .from('equipment')
+          .select('owner_id')
+          .eq('id', bookingEquipment.id)
+          .single();
+
+        if (equipData?.owner_id) {
+          await supabase.functions.invoke('send-whatsapp-alert', {
+            body: {
+              booking_type: 'equipment',
+              booker_phone: bookingData.phone,
+              owner_user_id: equipData.owner_id,
+              item_name: bookingEquipment.name,
+              start_date: bookingData.startDate,
+              end_date: bookingData.endDate,
+              total_amount: totalAmount,
+              location: bookingData.address,
+            }
+          });
+        }
+      } catch (whatsappError) {
+        console.error('WhatsApp alert failed:', whatsappError);
+      }
+
       toast({ title: 'Booking request sent successfully!' });
       setDialogOpen(false);
       setBookingEquipment(null);
