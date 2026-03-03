@@ -95,7 +95,10 @@ export default function Auth() {
     setIsLoading(false);
 
     if (error) {
-      toast({ title: error.message || 'Login failed', variant: 'destructive' });
+      const msg = error.message === 'Failed to fetch' 
+        ? 'Network error. Please check your internet connection and try again.' 
+        : (error.message || 'Login failed');
+      toast({ title: msg, variant: 'destructive' });
     } else {
       toast({ title: 'Login successful!' });
       navigate('/');
