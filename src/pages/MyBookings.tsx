@@ -221,6 +221,27 @@ export default function MyBookings() {
     setLoading(false);
   };
 
+  const sendStatusAlert = async (
+    bookingType: 'labor' | 'equipment',
+    phone: string,
+    itemName: string,
+    status: string
+  ) => {
+    try {
+      await supabase.functions.invoke('send-whatsapp-alert', {
+        body: {
+          action: 'status_update',
+          booking_type: bookingType,
+          booker_phone: phone,
+          item_name: itemName,
+          status,
+        }
+      });
+    } catch (e) {
+      console.error('WhatsApp status alert failed:', e);
+    }
+  };
+
   const updateLaborBookingStatus = async (bookingId: string, status: string) => {
     setUpdatingId(bookingId);
     const { error } = await supabase
@@ -232,6 +253,11 @@ export default function MyBookings() {
       toast({ title: 'Failed to update status', variant: 'destructive' });
     } else {
       toast({ title: `Booking ${status}` });
+      // Send WhatsApp alert to the farmer
+      const booking = incomingLaborRequests.find(b => b.id === bookingId);
+      if (booking?.farmer_phone) {
+        sendStatusAlert('labor', booking.farmer_phone, booking.labor_group?.name || 'Labor Group', status);
+      }
       fetchAllBookings();
     }
     setUpdatingId(null);
@@ -248,6 +274,11 @@ export default function MyBookings() {
       toast({ title: 'Failed to update status', variant: 'destructive' });
     } else {
       toast({ title: `Booking ${status}` });
+      // Send WhatsApp alert to the renter
+      const booking = incomingEquipmentRequests.find(b => b.id === bookingId);
+      if (booking?.renter_phone) {
+        sendStatusAlert('equipment', booking.renter_phone, booking.equipment?.name || 'Equipment', status);
+      }
       fetchAllBookings();
     }
     setUpdatingId(null);

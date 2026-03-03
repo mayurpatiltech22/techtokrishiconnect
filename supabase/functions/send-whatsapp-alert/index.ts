@@ -6,17 +6,19 @@ const corsHeaders = {
 };
 
 interface WhatsAppRequest {
+  action?: 'new_booking' | 'status_update';
   booking_type: 'labor' | 'equipment';
-  booking_id: string;
+  booking_id?: string;
   booker_phone: string;
   booker_name?: string;
-  owner_user_id: string;
+  owner_user_id?: string;
   item_name: string;
-  start_date: string;
-  end_date: string;
-  total_amount: number;
+  start_date?: string;
+  end_date?: string;
+  total_amount?: number;
   location?: string;
   workers?: number;
+  status?: string;
 }
 
 async function sendWhatsAppMessage(to: string, body: string) {
@@ -75,6 +77,7 @@ Deno.serve(async (req) => {
   try {
     const data: WhatsAppRequest = await req.json();
     const {
+      action = 'new_booking',
       booking_type,
       booker_phone,
       booker_name,
@@ -85,9 +88,41 @@ Deno.serve(async (req) => {
       total_amount,
       location,
       workers,
+      status,
     } = data;
 
-    // Fetch owner's phone from profiles
+    const results = { booker: null as any, owner: null as any, errors: [] as string[] };
+    const typeLabel = booking_type === 'labor' ? 'Labor Group' : 'Equipment';
+
+    // Handle status update alerts (accepted/declined)
+    if (action === 'status_update') {
+      const statusEmoji = status === 'confirmed' ? '✅' : status === 'cancelled' ? '❌' : '🔄';
+      const statusLabel = status === 'confirmed' ? 'Accepted' : status === 'cancelled' ? 'Declined' : status;
+
+      const statusMessage = `${statusEmoji} *KrishiConnect Booking ${statusLabel}!*
+
+Your ${typeLabel} booking for *${item_name}* has been *${statusLabel?.toLowerCase()}* by the ${booking_type === 'labor' ? 'group leader' : 'equipment owner'}.
+
+${status === 'confirmed' ? '🎉 The service provider will contact you soon to coordinate details.' : '💡 You can browse other options on KrishiConnect.'}`;
+
+      if (booker_phone) {
+        try {
+          results.booker = await sendWhatsAppMessage(booker_phone, statusMessage);
+          console.log('Status alert sent to:', booker_phone);
+        } catch (e) {
+          const msg = e instanceof Error ? e.message : String(e);
+          console.error('Failed to send status alert:', msg);
+          results.errors.push(`Booker: ${msg}`);
+        }
+      }
+
+      return new Response(
+        JSON.stringify({ success: true, message: 'Status alert processed', results }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Handle new booking alerts
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
@@ -101,23 +136,19 @@ Deno.serve(async (req) => {
     const ownerPhone = ownerProfile?.phone;
     const ownerName = ownerProfile?.full_name || 'Owner';
     const customerName = booker_name || 'A farmer';
+    const dateRange = `${formatDate(start_date || '')} to ${formatDate(end_date || '')}`;
 
-    const typeLabel = booking_type === 'labor' ? 'Labor Group' : 'Equipment';
-    const dateRange = `${formatDate(start_date)} to ${formatDate(end_date)}`;
-
-    // Message to the booker (customer)
     const bookerMessage = `🌾 *KrishiConnect Booking Confirmed!*
 
 Your ${typeLabel} booking has been submitted.
 
 📋 *${item_name}*
 📅 ${dateRange}${workers ? `\n👥 Workers: ${workers}` : ''}${location ? `\n📍 ${location}` : ''}
-💰 Total: ₹${total_amount.toLocaleString('en-IN')}
+💰 Total: ₹${(total_amount || 0).toLocaleString('en-IN')}
 
 Status: ⏳ Pending Approval
 You'll be notified once the ${booking_type === 'labor' ? 'group leader' : 'owner'} responds.`;
 
-    // Message to the owner/leader
     const ownerMessage = `🔔 *New ${typeLabel} Booking Request!*
 
 *${customerName}* wants to book your ${typeLabel.toLowerCase()}.
@@ -125,13 +156,10 @@ You'll be notified once the ${booking_type === 'labor' ? 'group leader' : 'owner
 📋 *${item_name}*
 📅 ${dateRange}${workers ? `\n👥 Workers: ${workers}` : ''}${location ? `\n📍 ${location}` : ''}
 📞 Contact: ${booker_phone}
-💰 Amount: ₹${total_amount.toLocaleString('en-IN')}
+💰 Amount: ₹${(total_amount || 0).toLocaleString('en-IN')}
 
 Please open KrishiConnect → My Bookings to accept or decline.`;
 
-    const results = { booker: null as any, owner: null as any, errors: [] as string[] };
-
-    // Send to booker
     if (booker_phone) {
       try {
         results.booker = await sendWhatsAppMessage(booker_phone, bookerMessage);
@@ -143,7 +171,6 @@ Please open KrishiConnect → My Bookings to accept or decline.`;
       }
     }
 
-    // Send to owner
     if (ownerPhone) {
       try {
         results.owner = await sendWhatsAppMessage(ownerPhone, ownerMessage);
